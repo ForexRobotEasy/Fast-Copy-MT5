@@ -1,0 +1,111 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                               Fast Copy MT5.mq5  |
+//|                                   Copyright 2021, Forex Robot Easy Team |
+//|                                                     forexroboteasy.com |
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//| Include necessary libraries and define global variables           |
+//+------------------------------------------------------------------+
+#include <Trade\Trade.mqh>
+
+CTrade copyTrade; // Create an instance of the CTrade class for transaction copying
+
+//+------------------------------------------------------------------+
+//| Custom function to copy a transaction from source to destination  |
+//| Input: source account and destination account                     |
+//| Output: transaction copied from source to destination             |
+//+------------------------------------------------------------------+
+void CopyTransaction(int source, int destination)
+{
+   // Get the ticket of the last transaction in the source account
+   ulong lastTicket = copyTrade.PositionGetInteger(POSITION_TICKET, source, SELECT_BY_POS, MODE_TRADES);
+
+   // Copy the transaction from source to destination
+   copyTrade.PositionCopy(source, destination, lastTicket, COPY_TICKET);
+}
+
+//+------------------------------------------------------------------+
+//| Custom function to copy transactions based on the specified      |
+//| direction, source account, and destination account                |
+//| Input: direction (MT4 to MT4, MT4 to MT5, MT5 to MT5, MT5 to MT4),|
+//|        source account, and destination account                   |
+//| Output: transactions copied from source to destination            |
+//+------------------------------------------------------------------+
+void CopyDirection(int direction, int source, int destination)
+{
+   // Copy transactions from source to destination based on the specified direction
+   if(direction == MT4_TO_MT4)
+   {
+      copyTrade.PositionCopy(source, destination, POSITION_TYPE_SELL|POSITION_TYPE_BUY, COPY_POSITIONS);
+   }
+   else if(direction == MT4_TO_MT5)
+   {
+      copyTrade.PositionCopy(source, destination, POSITION_TYPE_SELL|POSITION_TYPE_BUY, COPY_POSITIONS|COPY_TICKET);
+   }
+   else if(direction == MT5_TO_MT5)
+   {
+      copyTrade.PositionCopy(source, destination, POSITION_TYPE_SELL|POSITION_TYPE_BUY, COPY_POSITIONS);
+   }
+   else if(direction == MT5_TO_MT4)
+   {
+      copyTrade.PositionCopy(source, destination, POSITION_TYPE_SELL|POSITION_TYPE_BUY, COPY_POSITIONS|COPY_TICKET);
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Custom function to copy a specified quantity of transactions     |
+//| Input: quantity of transactions to be copied, source account, and |
+//|        destination account                                        |
+//| Output: specified quantity of transactions copied from source to  |
+//|         destination                                               |
+//+------------------------------------------------------------------+
+void CopyQuantity(int quantity, int source, int destination)
+{
+   // Copy the specified quantity of transactions from source to destination
+   for(int i=0; i<quantity; i++)
+   {
+      CopyTransaction(source, destination);
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+   // Set the trade context for the copyTrade instance
+   copyTrade.SetTradeContext(TRADE_CONTEXT_COPY);
+
+   return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+   // Clean up and release resources
+   copyTrade.Deinit();
+}
+
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+   // Copy transactions based on user input or conditions
+   // Example:
+   // CopyDirection(MT4_TO_MT5, 12345678, 87654321);
+   // CopyQuantity(10, 12345678, 87654321);
+}
+
+//+------------------------------------------------------------------+
+//| Expert start function                                            |
+//+------------------------------------------------------------------+
+void OnStart()
+{
+   // Run the expert advisor
+   OnTick();
+}
